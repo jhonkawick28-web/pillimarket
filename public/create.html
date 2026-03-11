@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Poll — Pillimarket</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <span class="logo-dot"></span>
+    Pillimarket
+  </a>
+  <div class="nav-actions">
+    <a href="/" class="btn btn-ghost">← Back to Markets</a>
+  </div>
+</nav>
+
+<!-- CREATE FORM -->
+<div class="create-container">
+  <div class="create-header">
+    <h1 class="create-title">Create a <span style="color:var(--accent)">Market</span></h1>
+    <p class="create-sub">Ask anything. Let the world predict.</p>
+  </div>
+
+  <div class="form-card">
+    <form id="create-form">
+
+      <!-- Question -->
+      <div class="form-group">
+        <label class="form-label" for="question-input">Your Prediction Question</label>
+        <textarea
+          id="question-input"
+          class="form-textarea"
+          placeholder="e.g. Will Bitcoin reach $200k before 2027?"
+          rows="3"
+          maxlength="300"
+          required
+        ></textarea>
+        <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">
+          <span id="char-count">0</span>/300
+        </div>
+      </div>
+
+      <!-- Category -->
+      <div class="form-group">
+        <label class="form-label" for="category-input">Category</label>
+        <select id="category-input" class="form-select">
+          <option value="General">General</option>
+          <option value="Crypto">Crypto</option>
+          <option value="Politics">Politics</option>
+          <option value="Tech">Tech</option>
+          <option value="Sports">Sports</option>
+          <option value="Science">Science</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Economy">Economy</option>
+        </select>
+      </div>
+
+      <!-- Options -->
+      <div class="form-group">
+        <label class="form-label">Answer Options <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(min 2)</span></label>
+        <div class="options-list" id="options-list">
+          <div class="option-row" data-index="0">
+            <input type="text" class="option-input" placeholder="Option 1 (e.g. Yes)" required />
+            <button type="button" class="option-remove" title="Remove option">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="option-row" data-index="1">
+            <input type="text" class="option-input" placeholder="Option 2 (e.g. No)" required />
+            <button type="button" class="option-remove" title="Remove option">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="add-option-btn" id="add-option-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Option
+        </button>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview-section" style="margin-bottom:1.5rem;display:none">
+        <label class="form-label">Preview</label>
+        <div id="preview-card" class="poll-card" style="cursor:default;pointer-events:none"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a href="/" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Create Market
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  const API = '/api/polls';
+
+  // ── Char counter
+  const qInput = document.getElementById('question-input');
+  const charCount = document.getElementById('char-count');
+  qInput.addEventListener('input', () => {
+    charCount.textContent = qInput.value.length;
+    updatePreview();
+  });
+
+  // ── Add option
+  let optionCount = 2;
+  document.getElementById('add-option-btn').addEventListener('click', () => {
+    optionCount++;
+    const list = document.getElementById('options-list');
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.dataset.index = optionCount - 1;
+    row.innerHTML = `
+      <input type="text" class="option-input" placeholder="Option ${optionCount}" />
+      <button type="button" class="option-remove" title="Remove">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>`;
+    list.appendChild(row);
+    row.querySelector('.option-input').focus();
+    attachRemoveListeners();
+    updatePreview();
+  });
+
+  function attachRemoveListeners() {
+    document.querySelectorAll('.option-remove').forEach(btn => {
+      btn.onclick = () => {
+        const rows = document.querySelectorAll('.option-row');
+        if (rows.length <= 2) { showToast('Need at least 2 options', 'error'); return; }
+        btn.closest('.option-row').remove();
+        updatePreview();
+      };
+    });
+  }
+
+  document.getElementById('options-list').addEventListener('input', updatePreview);
+  attachRemoveListeners();
+
+  // ── Live preview
+  function updatePreview() {
+    const q = qInput.value.trim();
+    const opts = [...document.querySelectorAll('.option-input')]
+      .map(i => i.value.trim()).filter(Boolean);
+
+    const section = document.getElementById('preview-section');
+    const card = document.getElementById('preview-card');
+
+    if (!q && opts.length < 2) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+
+    card.innerHTML = `
+      <div class="poll-card-header">
+        <div class="poll-question">${q || 'Your question here…'}</div>
+        <div class="poll-badge">${document.getElementById('category-input').value}</div>
+      </div>
+      <div class="poll-options">
+        ${opts.map(o => `
+          <div class="poll-option">
+            <div class="poll-option-bar" style="width:0%"></div>
+            <div class="poll-option-content">
+              <div class="poll-option-text">${o}</div>
+              <div class="poll-option-pct">0%</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="poll-footer">
+        <div class="poll-meta"><span class="poll-meta-item">0 votes</span></div>
+      </div>`;
+  }
+
+  document.getElementById('category-input').addEventListener('change', updatePreview);
+
+  // ── Submit
+  document.getElementById('create-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const question = qInput.value.trim();
+    const options = [...document.querySelectorAll('.option-input')]
+      .map(i => i.value.trim()).filter(Boolean);
+    const category = document.getElementById('category-input').value;
+
+    if (!question) { showToast('Please enter a question', 'error'); return; }
+    if (options.length < 2) { showToast('Add at least 2 options', 'error'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, options, category })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Market created! 🎉', 'success');
+        setTimeout(() => window.location.href = '/', 1200);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      showToast(err.message || 'Failed to create poll', 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Create Market`;
+    }
+  });
+
+  // ── Toast
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    container.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+</script>
+</body>
+</html>

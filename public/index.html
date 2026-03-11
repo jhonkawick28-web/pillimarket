@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pillimarket — Predict the Future</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <span class="logo-dot"></span>
+    Pillimarket
+  </a>
+  <div class="nav-actions">
+    <span class="live-badge">
+      <span class="live-dot"></span>
+      LIVE
+    </span>
+    <a href="/create.html" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Create Poll
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1 class="hero-title">Predict the future.<br><span>Vote on what matters.</span></h1>
+  <p class="hero-sub">The open prediction market for everything. Create polls, vote, and track outcomes in real time.</p>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Polls</div>
+      <div class="stat-value green" id="stat-polls">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Votes</div>
+      <div class="stat-value blue" id="stat-votes">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Now</div>
+      <div class="stat-value green" id="stat-active">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDING -->
+<div class="section" id="trending-section" style="display:none">
+  <div class="section-title">🔥 Trending</div>
+  <div class="trending-grid" id="trending-grid"></div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-tabs">
+    <button class="tab-btn active" data-sort="newest">Newest</button>
+    <button class="tab-btn" data-sort="popular">Most Popular</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="search-input" placeholder="Search polls…" />
+  </div>
+</div>
+
+<!-- POLLS GRID -->
+<div class="section">
+  <div class="section-title">All Markets</div>
+  <div id="polls-container">
+    <div class="loading-spinner"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Pillimarket &copy; 2025 — The open prediction market. Built with ❤️</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
